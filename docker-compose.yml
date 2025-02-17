@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  critical-events-finder-nestjs:
+    build: .
+    ports:
+      - '5001:5001'
+    env_file:
+      - .env
+
+    develop:
+      watch:
+        - path: .
+          target: /usr/src/app
+          action: sync
