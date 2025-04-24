@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   InternalServerErrorException,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
@@ -12,22 +13,14 @@ import { jsonSchema } from 'src/schemas/jsonSchema';
 @Injectable()
 export class FileUploadService {
   private readonly S3_BUCKET_NAME: string;
-  private readonly S3_REGION_NAME: string;
-  private readonly s3: AWS.S3;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject('S3_CLIENT') private readonly s3: AWS.S3,
+  ) {
     this.S3_BUCKET_NAME = this.configService.get<string>(
       'S3_BUCKET_NAME',
     ) as string;
-    this.S3_REGION_NAME = this.configService.get<string>(
-      'S3_REGION_NAME',
-    ) as string;
-
-    this.s3 = new AWS.S3({
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-      region: this.S3_REGION_NAME,
-    });
   }
 
   async uploadExcelFile(uploadedFile: Express.Multer.File) {
@@ -239,7 +232,7 @@ export class FileUploadService {
           );
         }
 
-        const daysList = rows.slice(1).reduce(
+        const daysList = rows.reduce(
           (acc: any, row: any) => {
             const [dayIndex, intersection, event] = row;
             const day_id = `day-${dayIndex}`;
